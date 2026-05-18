@@ -20,7 +20,12 @@ on `main`).
   multi-affiliation is visible as a connection pattern rather than a colour
   blend.
 - **Right panel:** rendered markdown for the clicked node, with `[[wikilinks]]`
-  navigable in-place.
+  navigable in-place. Shows the file's `relationship_bucket` as a pill.
+- **Gold ring:** people in the `central_plus_institute/*` bucket — appearing
+  in BOTH the Keough central directory AND an institute people page — get a
+  thin bright outer stroke. The highest-confidence provenance class is
+  highlighted; the others render unchanged. Opacity is deliberately reserved
+  for the canonical `epistemic_status` channel (Pathway 14) when it lands.
 
 ## Build
 

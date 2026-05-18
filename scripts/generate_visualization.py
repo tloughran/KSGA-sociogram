@@ -118,6 +118,13 @@ def build_graph_data(data):
     nodes = []
     for f in files:
         unit = f['unit']
+        bucket = f.get('relationship_bucket') or ''
+        # `central_plus_institute/...` people get the gold-standard ring — they
+        # appear in BOTH the Keough central directory AND an institute people
+        # page, the strongest provenance signal in the data model. Other
+        # buckets (institute_only, central_only) render unchanged: the missing
+        # ring is not a fault marker, just an absence of double-source proof.
+        is_gold = bucket.startswith('central_plus_institute/')
         nodes.append({
             'id': f['filepath'],
             'title': f['title'],
@@ -127,6 +134,8 @@ def build_graph_data(data):
             'type': f.get('type') or '',
             'date': str(f.get('date') or ''),
             'epistemic_status': f.get('epistemic_status') or '',
+            'relationship_bucket': bucket,
+            'is_gold': is_gold,
             'size': max(4, min(14, 4 + (f.get('size_bytes', 0) or 0) ** 0.5 / 30)),
             'content': f.get('content', ''),
         })
@@ -267,6 +276,11 @@ def generate_html(data, nodes, links):
   .link { stroke-opacity: 0.35; }
   .link.affiliation { stroke-dasharray: 3 2; }
   .node circle { stroke: #0a0a0f; stroke-width: 1; cursor: pointer; }
+  /* Gold-standard ring: double-sourced faculty (appear in both Keough
+     central directory AND an institute people page) get a thin bright
+     stroke. Not a fault marker on the others; just a positive highlight
+     on the highest-confidence provenance bucket. */
+  .node.gold circle { stroke: #e8d28a; stroke-width: 1.6; }
   .node text {
     pointer-events: none;
     fill: var(--fg-dim);
@@ -340,6 +354,8 @@ def generate_html(data, nodes, links):
   #legend div { display: flex; align-items: center; gap: 6px; padding: 1px 0; }
   #legend .line { width: 18px; height: 0; border-top: 1px solid var(--fg-dim); }
   #legend .line.aff { border-top: 1px dashed var(--fg-dim); }
+  #legend .dot { width: 9px; height: 9px; border-radius: 50%; background: #4a5e6d; }
+  #legend .dot.gold { border: 1.6px solid #e8d28a; background: #4a5e6d; }
 
   #status {
     position: absolute;
@@ -377,6 +393,7 @@ def generate_html(data, nodes, links):
     <div id="legend">
       <div><span class="line"></span> wikilink</div>
       <div><span class="line aff"></span> affiliation</div>
+      <div><span class="dot gold"></span> central + institute</div>
     </div>
     <div id="status"></div>
   </div>
@@ -470,7 +487,7 @@ const linkSel = linkLayer.selectAll('line').data(LINKS).enter().append('line')
   .attr('stroke-width', d => d.type === 'affiliation' ? 1.2 : 0.8);
 
 const nodeSel = nodeLayer.selectAll('g').data(NODES).enter().append('g')
-  .attr('class', 'node')
+  .attr('class', d => 'node' + (d.is_gold ? ' gold' : ''))
   .call(d3.drag()
     .on('start', (event, d) => { if (!event.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
     .on('drag', (event, d) => { d.fx = event.x; d.fy = event.y; })
@@ -587,6 +604,10 @@ function selectNode(d) {
     .style('color', d.color).text(LABELS[d.unit] || d.unit);
   if (d.type) meta.append('span').attr('class', 'pill').text(d.type);
   if (d.epistemic_status) meta.append('span').attr('class', 'pill').text(d.epistemic_status);
+  if (d.relationship_bucket) {
+    const pill = meta.append('span').attr('class', 'pill').text(d.relationship_bucket);
+    if (d.is_gold) pill.style('color', '#e8d28a');
+  }
   if (d.date) meta.append('span').attr('class', 'pill').text(d.date);
   meta.append('div').style('margin-top', '4px')
     .style('font-family', 'ui-monospace, Menlo, monospace')

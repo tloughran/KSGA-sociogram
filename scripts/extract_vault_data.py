@@ -259,6 +259,36 @@ def all_affiliations(fm):
     return out
 
 
+def relationship_bucket(rel_path, fm):
+    """Mirror tools/validate_vault.py bucket logic, returning a string like
+    'central_plus_institute/faculty' or None for non-person files. Used by the
+    generator to ring the gold-standard (double-sourced) faculty nodes.
+
+    Logic per validator:
+      ingested_by == 'keough-wiki-faculty-ingest' AND has institute_affiliations
+        → central_plus_institute/<role>
+      ingested_by == 'keough-wiki-faculty-ingest' AND NO institute_affiliations
+        → central_only/<role>
+      institute_only == True
+        → institute_only/<role>
+      otherwise
+        → None (file isn't a tracked person, or lacks the marker)
+    """
+    if not isinstance(fm, dict):
+        return None
+    if fm.get('type') != 'person':
+        return None
+    if not (rel_path.startswith('Faculty/') or rel_path.startswith('Staff/')):
+        return None
+    role = fm.get('person_role') or 'unknown'
+    has_affs = bool(fm.get('institute_affiliations'))
+    if fm.get('ingested_by') == 'keough-wiki-faculty-ingest':
+        return ('central_plus_institute/' if has_affs else 'central_only/') + role
+    if fm.get('institute_only') is True:
+        return 'institute_only/' + role
+    return None
+
+
 def scan_vault(vault_path, institute_paths):
     """Walk the vault and return file records."""
     vault = Path(vault_path)
@@ -285,6 +315,7 @@ def scan_vault(vault_path, institute_paths):
             'epistemic_status': fm.get('epistemic_status') if isinstance(fm, dict) else None,
             'wikilinks': extract_wikilinks(body),
             'all_affiliations': all_affiliations(fm),
+            'relationship_bucket': relationship_bucket(rel, fm),
             'size_bytes': len(content.encode('utf-8')),
             'content': content[:8000],  # cap preview at 8KB for the right panel
         })
