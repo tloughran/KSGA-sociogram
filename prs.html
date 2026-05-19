@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>KSGA PRS Coils</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg:#0a0a0f; --panel:#15161c; --panel-2:#1c1e26; --fg:#d8d8e0;
+    --fg-dim:#9a9aa6; --fg-mute:#6a6a76; --border:#2a2c36; --accent:#c9a84c;
+    --p:#7A6B8A; --r:#5A8EAF; --s:#5E9B76; --cross:#C08B3E;
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; }
+  body {
+    background:var(--bg); color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    font-size:13px; padding:18px 22px; overflow-y:auto;
+  }
+  h1 { font-size:15px; color:var(--accent); margin:0 0 2px; }
+  .sub { color:var(--fg-dim); font-size:12px; margin-bottom:18px; }
+  .legend { display:flex; gap:16px; margin-bottom:18px; font-size:11px; color:var(--fg-dim); }
+  .legend .k { display:flex; align-items:center; gap:5px; }
+  .legend .sw { width:11px; height:11px; border-radius:2px; }
+  .coil { margin-bottom:16px; background:var(--panel); border:1px solid var(--border); border-radius:6px; padding:14px 16px; }
+  .coil h2 { font-size:13px; margin:0 0 10px; color:var(--fg); }
+  .coil h2 .tag { color:var(--fg-mute); font-weight:400; font-size:11px; margin-left:6px; }
+  .flow { display:grid; grid-template-columns:1fr 40px 1fr 40px 1fr; align-items:center; gap:6px; }
+  .col-label { font-size:10px; color:var(--fg-mute); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:4px; }
+  .card {
+    background:var(--panel-2); border:1px solid var(--border); border-left-width:3px;
+    border-radius:4px; padding:8px 10px; cursor:pointer; margin-bottom:6px;
+  }
+  .card:hover { border-color:var(--accent); }
+  .card.p { border-left-color:var(--p); }
+  .card.r { border-left-color:var(--r); }
+  .card.s { border-left-color:var(--s); }
+  .card.cross { border-left-color:var(--cross); }
+  .card .id { font-family:ui-monospace,Menlo,monospace; font-size:10px; color:var(--fg-mute); }
+  .card .title { font-size:12px; color:var(--fg); margin-top:1px; }
+  .arrow { text-align:center; color:var(--fg-mute); font-size:18px; }
+  .crossnote { margin-top:8px; font-size:11px; color:var(--cross); }
+  #detail {
+    position:fixed; right:0; top:0; bottom:0; width:380px;
+    background:var(--panel); border-left:1px solid var(--border);
+    padding:18px; overflow-y:auto; transform:translateX(100%); transition:transform .2s;
+  }
+  #detail.open { transform:translateX(0); }
+  #detail h3 { color:var(--accent); margin:0 0 4px; font-size:14px; }
+  #detail .meta { color:var(--fg-dim); font-size:11px; margin-bottom:12px; }
+  #detail .body { font-size:12.5px; line-height:1.5; }
+  #detail .close { position:absolute; right:14px; top:12px; cursor:pointer; color:var(--fg-mute); }
+  #detail .pill { display:inline-block; padding:1px 6px; border-radius:2px; background:var(--panel-2); margin-right:4px; font-size:11px; }
+</style>
+</head>
+<body>
+<h1>PRS Coils — Kroc Slice</h1>
+<div class="sub">Problem &rarr; Resource &rarr; Solution triples. A "synergistic coil" is a Resource that spans multiple Problem&ndash;Solution transitions. P0004 is cross-coil (motivates all three).</div>
+<div class="legend">
+  <div class="k"><span class="sw" style="background:var(--p)"></span> Problem</div>
+  <div class="k"><span class="sw" style="background:var(--r)"></span> Resource (coil)</div>
+  <div class="k"><span class="sw" style="background:var(--s)"></span> Solution</div>
+  <div class="k"><span class="sw" style="background:var(--cross)"></span> Cross-coil problem (P0004)</div>
+</div>
+<div id="coils"></div>
+
+<div id="detail">
+  <span class="close" onclick="document.getElementById('detail').classList.remove('open')">&times;</span>
+  <div id="detail-content"></div>
+</div>
+
+<script>
+const NODES = {
+  "0001": {t:"Peace Accord Implementation Monitoring Gap", k:"p", inst:"kroc", body:"How can peacebuilding researchers and practitioners monitor implementation across whole peace agreements in ways that are comparable across cases, usable in real time, and credible to parties outside the university?"},
+  "0002": {t:"Religion-Peacebuilding Translation Gap", k:"p", inst:"kroc", body:"How can religious, theological, and ethical peacebuilding knowledge move between academic study, Catholic and interreligious practice, and conflict-affected communities without becoming either purely internal theology or generic secular peacebuilding?"},
+  "0003": {t:"Digital Political Violence Early Warning Gap", k:"p", inst:"kroc", body:"How can peacebuilders identify and respond to online manipulation, dehumanizing content, and polarizing digital systems before they harden into political instability or violence?"},
+  "0004": {t:"Practitioner-Scholar Knowledge Transfer Gap", k:"cross", inst:"kroc", body:"How can Kroc turn field-facing peacebuilding practice into durable research, teaching resources, policy insight, and reusable methods without losing practitioner knowledge in one-off events? CROSS-COIL: motivates all three resources."},
+  "0005": {t:"Peace Accords Matrix", k:"r", inst:"kroc", body:"Candidate synergistic coil: a Kroc-hosted implementation-data resource that supports comparative research, real-time accord monitoring, and practitioner-facing decision support. Spans P0001 and P0004."},
+  "0006": {t:"Catholic Peacebuilding Network", k:"r", inst:"kroc", body:"Candidate synergistic coil: a Kroc-housed network joining Catholic peacebuilding practitioners, academics, clergy, and lay leaders around study, practice, fellowship, publications, and partnerships. Spans P0002 and P0004."},
+  "0007": {t:"PeaceTech and Polarization Lab", k:"r", inst:"kroc", body:"Candidate synergistic coil: a Kroc lab connecting prosocial technology design, deliberative tech and democracy, AI for public discourse, and governance of digital public squares. Spans P0003 and P0004."},
+  "0008": {t:"Colombia Barometer Initiative", k:"s", inst:"kroc", body:"Kroc/PAM's real-time implementation monitoring model for the 2016 Colombian Peace Accord. A concrete Solution to the peace-accord monitoring gap."},
+  "0009": {t:"Kroc-CRS Peacebuilding Fellowship", k:"s", inst:"kroc", body:"A field-practice-to-research model housed in the Catholic Peacebuilding Network orbit. Converts practitioner experience into reflection, scholarship, and policy."},
+  "0010": {t:"AI, Social Media, and Political Violence Prevention", k:"s", inst:"kroc", body:"Kroc's AI/social-media project using computational analysis of political memes and disinformation to support near-real-time political violence prevention."},
+};
+const COILS = [
+  {name:"Peace Accords Matrix", tag:"PAM lineage", p:["0001","0004"], r:"0005", s:["0008"]},
+  {name:"Catholic Peacebuilding Network", tag:"CPN lineage", p:["0002","0004"], r:"0006", s:["0009"]},
+  {name:"PeaceTech and Polarization Lab", tag:"PeaceTech lineage", p:["0003","0004"], r:"0007", s:["0010"]},
+];
+
+function card(id) {
+  const n = NODES[id];
+  const cls = n.k === "cross" ? "cross" : n.k;
+  return `<div class="card ${cls}" onclick="showDetail('${id}')"><div class="id">${id[0]==='0'?({p:'P',r:'R',s:'S',cross:'P'}[n.k]):''}${id}</div><div class="title">${n.t}</div></div>`;
+}
+
+const wrap = document.getElementById('coils');
+wrap.innerHTML = COILS.map(c => `
+  <div class="coil">
+    <h2>${c.name}<span class="tag">${c.tag}</span></h2>
+    <div class="flow">
+      <div><div class="col-label">Problem</div>${c.p.map(card).join('')}</div>
+      <div class="arrow">&rarr;</div>
+      <div><div class="col-label">Resource (coil)</div>${card(c.r)}</div>
+      <div class="arrow">&rarr;</div>
+      <div><div class="col-label">Solution</div>${c.s.map(card).join('')}</div>
+    </div>
+  </div>
+`).join('');
+
+function showDetail(id) {
+  const n = NODES[id];
+  const label = {p:'Problem',r:'Resource',s:'Solution',cross:'Problem (cross-coil)'}[n.k];
+  document.getElementById('detail-content').innerHTML =
+    `<h3>${n.t}</h3>
+     <div class="meta"><span class="pill">${id}</span><span class="pill">${label}</span><span class="pill">${n.inst}</span></div>
+     <div class="body">${n.body}</div>`;
+  document.getElementById('detail').classList.add('open');
+}
+</script>
+</body>
+</html>
