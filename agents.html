@@ -58,7 +58,7 @@
 const VAULT = {x:380, y:230, w:150, h:54};
 const AGENTS = {
   "weekly-update": {
-    x:380, y:60, w:200, h:58, status:"active",
+    x:380, y:60, w:200, h:58, status:"active", engine:"Claude Code",
     title:"keough-wiki-weekly-update",
     schedule:"Weekly · Sun 06:00",
     scope:"Whole vault (read)",
@@ -67,7 +67,7 @@ const AGENTS = {
     edge:"summarize"
   },
   "title-verification": {
-    x:610, y:230, w:210, h:58, status:"active",
+    x:610, y:230, w:210, h:58, status:"active", engine:"Claude Code",
     title:"keough-wiki-title-verification",
     schedule:"Monthly · 1st Sun 04:00",
     scope:"Faculty/ + Staff/ (person files)",
@@ -76,7 +76,7 @@ const AGENTS = {
     edge:"verify people"
   },
   "prs-formatter": {
-    x:380, y:400, w:200, h:58, status:"active",
+    x:380, y:400, w:200, h:58, status:"active", engine:"Claude Code",
     title:"keough-wiki-prs-formatter",
     schedule:"Weekly · Sun 03:30",
     scope:"PRS/ (Problems/Resources/Solutions)",
@@ -85,12 +85,12 @@ const AGENTS = {
     edge:"stamp PRS"
   },
   "faculty-enrichment": {
-    x:150, y:230, w:200, h:58, status:"planned",
+    x:150, y:230, w:200, h:58, status:"planned", engine:"OpenAI (gpt-4o)",
     title:"keough-wiki-faculty-enrichment",
-    schedule:"Planned",
+    schedule:"Weekly · Sun 05:00 (planned)",
     scope:"Faculty/ (person files)",
-    io:"Writes a ~200-word principal-research-areas summary per faculty member, sourced from canonical_profile_url.",
-    owns:["research_summary (frontmatter + body)"],
+    io:"Deterministic Python harness (enrich.py); calls OpenAI only for the ~200-word research summary per faculty member, sourced from canonical_profile_url.",
+    owns:["research_summary_status / _source_url / _written_at","## Principal research areas section"],
     edge:"enrich faculty"
   },
 };
@@ -137,6 +137,7 @@ function showAgent(id) {
   document.getElementById('panel-content').innerHTML = `
     <h3>${a.title}</h3>
     <div class="meta"><span class="${statusCls}">&#9679; ${a.status}</span> &middot; ${a.schedule}</div>
+    <div class="row"><div class="k">Engine</div><div class="v">${a.engine || 'Claude Code'}</div></div>
     <div class="row"><div class="k">Scope</div><div class="v">${a.scope}</div></div>
     <div class="row"><div class="k">What it does</div><div class="v">${a.io}</div></div>
     <div class="row"><div class="k">Owns</div><div class="v">${a.owns.map(o=>'<span class="pill">'+o+'</span>').join('')}</div></div>
